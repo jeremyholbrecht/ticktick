@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -29,7 +30,7 @@ func main() {
 		timer := time.NewTimer(3 * time.Second)
 		<-timer.C
 		fmt.Println("Time is up!")
-		play_alarm()
+		log.Fatal(play_alarm())
 
 	case 4:
 		fmt.Println("4sec ticking....")
@@ -41,31 +42,34 @@ func main() {
 }
 
 func play_alarm() error {
-	f, err := os.Open("alarm.mp3")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	d, err := mp3.NewDecoder(f)
+	// Open the file
+	file, err := os.Open("alarm.mp3")
 	if err != nil {
 		return err
 	}
 
-	c, ready, err := oto.NewContext(d.SampleRate(), 2, 2)
+	defer file.Close()
+
+	//decode the file
+	decoder, err := mp3.NewDecoder(file)
+	if err != nil {
+		return err
+	}
+
+	c, ready, err := oto.NewContext(decoder.SampleRate(), 2, 2)
 	if err != nil {
 		return err
 	}
 	<-ready
 
-	p := c.NewPlayer(d)
-	defer p.Close()
-	p.Play()
+	//create a new player that will handle the sound, paused by default
+	player := c.NewPlayer(decoder)
+	defer player.Close()
+	player.Play()
 
-	fmt.Printf("Length: %d[bytes]\n", d.Length())
 	for {
 		time.Sleep(time.Second)
-		if !p.IsPlaying() {
+		if !player.IsPlaying() {
 			break
 		}
 	}
