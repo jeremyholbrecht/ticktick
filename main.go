@@ -13,6 +13,7 @@ func main() {
 
 	flag.Parse()
 
+	//TODO: have a timer for seconds, minutes, hours
 	if *set_timer != 0 {
 		fmt.Printf("%v secs ticking... \n", *set_timer)
 		timer := time.NewTimer(time.Duration(*set_timer * float64(time.Second)))
